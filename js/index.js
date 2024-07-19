@@ -40,6 +40,16 @@ const gameBoard = document.getElementsByClassName("game__board")[0];
 const cardBack = document.getElementsByClassName("card__back");
 const cardFront = document.getElementsByClassName("card__front");
 
+// 게임 화면 초기화
+function initScreen() {
+  gameBoard.innerHTML = "";
+  playerTime.innerHTML = time;
+  playerStage.innerHTML = stage;
+  playerTime.classList.remove("blink");
+  void playerTime.offsetWidth;
+  playerTime.classList.add("blink");
+}
+
 //카드 덱 생성
 function shuffle(array) {
   return array.sort(() => Math.random() - 0.5);
@@ -136,7 +146,7 @@ function startTimer() {
       clearInterval(timer);
       stopGame();
     }
-  }, 1000);
+  }, 100);
 }
 
 gameBoard.addEventListener("click", function (e) {
@@ -210,7 +220,27 @@ function closeCard(indexArr) {
 }
 
 //스테이지 클리어
-function clearStage() {}
+const board = document.getElementsByClassName("board")[0];
+const stageClearImg = document.getElementsByClassName("stage-clear")[0];
+function clearStage() {
+  clearInterval(timer);
+
+  // 20초 이하로는 빨라지지 않음
+  if (stage <= 8) {
+    time = 60 - stage * 5; // 남은 시간 초기화 (스테이지 진행 시 마다 5초씩 감소)
+  }
+  stage++; // 스테이지 값 1 추가
+  cardDeck = [];
+
+  stageClearImg.classList.add("show");
+
+  // 2초 후 다음 스테이지 시작
+  setTimeout(() => {
+    stageClearImg.classList.remove("show");
+    initScreen();
+    startGame();
+  }, 2000);
+}
 
 //모든 카드를 다 찾았는지 확인
 function checkClear() {
@@ -221,6 +251,7 @@ function checkClear() {
       return;
     }
   });
+  return isClear;
 }
 
 function getOpenCardArr(id) {
@@ -235,8 +266,59 @@ function getOpenCardArr(id) {
   return openCardIndexArr;
 }
 
-//미완성
-function showGameResult() {}
+// 게임 종료 시 출력 문구
+const modal = document.getElementsByClassName("modal")[0];
+function showGameResult() {
+  let resultText = "";
+
+  if (stage > 0 && stage <= 2) {
+    resultText = "한 번 더 해볼까요?";
+  } else if (stage > 2 && stage <= 4) {
+    resultText = "조금만 더 해봐요!";
+  } else if (stage > 4 && stage <= 5) {
+    resultText = "짝 맞추기 실력이 대단해요!";
+  } else if (stage > 5 && stage <= 7) {
+    resultText = "기억력이 엄청나시네요!";
+  } else if (stage > 7 && stage <= 9) {
+    resultText = "당신의 두뇌,<br/>어쩌면<br/>컴퓨터보다 좋을지도..";
+  } else if (stage > 9 && stage <= 11) {
+    resultText = "여기까지 온 당신,<br/>혹시 '포토그래픽 메모리'<br/>소유자신가요?";
+  } else if (stage > 11) {
+    resultText = "탈인간의 능력을 가지셨습니다!!! 🙀";
+  }
+
+  modalTitle.innerHTML = `
+    <h1 class="modal__content-title--result color-red">
+        게임 종료!
+    </h1>
+    <span class="modal__content-title--stage">
+        기록 : <strong>STAGE ${stage}</strong>
+    </span>
+    <p class="modal__content-title--desc">
+        ${resultText}
+    </p>
+    `;
+
+  modal.classList.add("show");
+}
+
+// 모달창 닫으면 게임 재시작
+const modalTitle = document.getElementsByClassName("modal__content-title")[0];
+const modalCloseButton = document.getElementsByClassName("modal__content-close-button")[0];
+
+modal.addEventListener("click", function (e) {
+  if (e.target === modal || e.target === modalCloseButton) {
+    modal.classList.remove("show");
+    restartGame();
+  }
+});
+
+// 게임 재시작
+function restartGame() {
+  initGame();
+  initScreen();
+  startGame();
+}
 
 function stopGame() {
   showGameResult();
